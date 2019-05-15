@@ -61,15 +61,15 @@ window.RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnecti
 window.RTCIceCandidate = window.RTCIceCandidate || window.mozRTCIceCandidate || window.webkitRTCIceCandidate;
 window.RTCSessionDescription =
   window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
-
-const socket = io.connect('http://localhost:3000');
+var myhost=location.origin;
+const socket = io.connect(myhost);
 var localStream;
 var peerConn;
 var connectedUser = null;
 var configuration = {
   iceServers: [
     {
-      url: 'turn:115.28.170.217:3478',
+      url: 'stun:stun1.l.google.com:19302',
       credential: 'zmecust',
       username: 'zmecust',
     },

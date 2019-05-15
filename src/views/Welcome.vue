@@ -37,7 +37,8 @@
 </template>
 
 <script>
-const socket = io.connect('http://localhost:3000');
+var myhost=location.origin;
+const socket = io.connect(myhost);
 
 export default {
   data() {
