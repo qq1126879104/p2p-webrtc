@@ -69,11 +69,11 @@ var connectedUser = null;
 var configuration = {
   iceServers: [
     {
-      url: 'stun:stun1.l.google.com:19302',
-      credential: 'zmecust',
-      username: 'zmecust',
-    },
-  ],
+      url: "turn:turn.sczhou.com:3478",
+      credential: "ling1234",
+      username: "ling"
+    }
+  ]
 };
 
 export default {
