@@ -1,35 +1,29 @@
 <template>
 	<div class="content">
+		<div class="bg" v-show="!show"></div>
 		<div class="content-block" v-show="show">
-			<div id="top" style="width:1080px; height:200px;">
-				<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="1080" height="200">
-					<param name="movie" value="/static/top.swf">
-					<param name="quality" value="high">
-					<param name="wmode" value="transparent">
-					<embed src="/static/top.swf" width="1080" height="200" quality="high" type="application/x-shockwave-flash"></object>
-			</div>
-			<div class="video local">
-				<video id="localVideo" :src="local_video" autoplay></video>
-				<div class="video-msg" v-show="localMsgShow">{{localMsg}}</div>
-			</div>
-			<div class="video center">
-				<video id="remoteVideo" :src="remote_video" autoplay></video>
-				<div class="video-msg" v-show="remoteMsgShow">{{remoteMsg}}</div>
+			<div class="row">
+				<div class="col-md-6" style="height: 500px">
+					<video id="localVideo" :src="local_video" autoplay></video>
+				</div>
+				<div class="col-md-6" style="height: 500px">
+					<video id="remoteVideo" :src="remote_video" autoplay></video>
+				</div>
 			</div>
 			<div class="btn-box" @click="hangUp">挂断</div>
-		</div>
-		<div class="msg" v-show="msgShow"><span>{{msg}}</span></div>
-		<div class="audio-box">
-			<audio autoplay="autoplay" loop="loop" :src="open_audio"></audio>
-			<iframe allow="autoplay"></iframe>
-			<audio autoplay="autoplay" :src="close_audio"></audio>
-			<!-- <iframe allow="autoplay" :src="close_audio"></iframe> -->
+			<div class="msg" v-show="msgShow"><span>{{msg}}</span></div>
+			<div class="audio-box">
+				<audio autoplay="autoplay" loop="loop" :src="open_audio"></audio>
+				<iframe allow="autoplay"></iframe>
+				<audio autoplay="autoplay" :src="close_audio"></audio>
+				<!-- <iframe allow="autoplay" :src="close_audio"></iframe> -->
+			</div>
 		</div>
 		<div class="preview" v-show="accept_video">
 			<div class="preview-wrapper">
 				<div class="preview-container">
 					<div class="preview-body">
-						<h4>您有视频邀请，是否接受?</h4>
+						<h4>设备编号{{call_username}}发起视频邀请，是否接受?</h4>
 						<button class="btn-success btn" @click="accept">接受</button>
 						<button class="btn-danger btn" style="margin-right: 70px" @click="reject">拒绝</button>
 					</div>
@@ -59,36 +53,23 @@
 		}]
 	};
 
-	function getQuery(name) {
-		let reg = `(^|&)${name}=([^&]*)(&|$)`
-		let r = window.location.search.substr(1).match(reg);
-		if (r != null) return unescape(r[2]);
-		return null;
-	}
-	
 	export default {
 		data() {
 			return {
-				user_name: "",
+				user_name: 'admin',
 				show: true,
 				users: '',
 				call_username: '',
 				local_video: '',
 				remote_video: '',
 				accept_video: false,
-				localMsgShow: true,
-				localMsg: "正在加载摄像头数据...",
-				remoteMsgShow: true,
-				remoteMsg: "等待对方连接...",
 				msgShow: false,
 				msg: "",
-				open_audio:"/static/wx.mp3",
-				close_audio:"",
+				open_audio: "",
+				close_audio: "",
 			};
 		},
 		mounted() {
-			this.user_name=getQuery("callerid") || ("unknown-" + Math.floor(Math.random() * 900 + 100));
-			console.log(this.user_name)
 			this.send({
 				event: 'join',
 				name: this.user_name,
@@ -142,9 +123,8 @@
 				if (data.success === false) {
 					this.showMsgToBack("连接失败");
 				} else {
+					this.show = false;
 					this.users = data.allUsers;
-					this.call_username = "admin";
-					this.call();
 					this.initCreate();
 				}
 			},
@@ -158,7 +138,6 @@
 				function gotStream(e) {
 					//displaying local video stream on the page
 					self.local_video = window.URL.createObjectURL(e);
-					self.localMsgShow = false;
 					// var audioTracks = e.getAudioTracks();
 					// // if MediaStream has reference to microphone
 					// if (audioTracks[0]) {
@@ -174,18 +153,25 @@
 				}
 			},
 			call() {
-				connectedUser = this.call_username;
-				this.send({
-					event: 'call',
-				});
-				this.createConnection();
+				if (this.call_username.length > 0) {
+					if (this.users[this.call_username] === true) {
+						connectedUser = this.call_username;
+						this.createConnection();
+						this.send({
+							event: 'call',
+						});
+					} else {
+						this.showMsgToBack("连接失败");
+					}
+				} else {
+					this.showMsgToBack("对方繁忙");
+				}
 			},
 			createConnection() {
 				peerConn = new RTCPeerConnection(configuration);
-				localStream && peerConn.addStream(localStream);
+				peerConn.addStream(localStream);
 				peerConn.onaddstream = e => {
 					this.remote_video = window.URL.createObjectURL(e.stream);
-					this.remoteMsgShow = false;
 				};
 				peerConn.onicecandidate = event => {
 					setTimeout(() => {
@@ -199,8 +185,11 @@
 				};
 			},
 			handleCall(data) {
+				this.call_username = data.name;
 				this.accept_video = true;
 				connectedUser = data.name;
+				this.open_audio = "/static/wx.mp3";
+				console.log(this.call_username)
 			},
 			reject() {
 				this.send({
@@ -208,7 +197,7 @@
 					accept: false,
 				});
 				this.accept_video = false;
-				this.open_audio="";
+				this.open_audio = "";
 			},
 			accept() {
 				this.send({
@@ -216,6 +205,7 @@
 					accept: true,
 				});
 				this.accept_video = false;
+				this.open_audio = "";
 			},
 			handleAccept(data) {
 				if (data.accept) {
@@ -233,9 +223,8 @@
 						}
 					);
 				} else {
-					this.showMsgToBack("对方繁忙");
+					this.showMsgToBack('对方已拒绝');
 				}
-				this.open_audio="";
 			},
 			handleOffer(data) {
 				connectedUser = data.name;
@@ -251,13 +240,12 @@
 						});
 					},
 					error => {
-						this.showMsgToBack("连接失败");
+						this.showMsgToBack('连接失败');
 					}
 				);
-				this.open_audio="";
 			},
 			handleMsg(data) {
-				this.showMsgToBack(data.message);
+				console.log(data.message);
 			},
 			handleAnswer(data) {
 				peerConn.setRemoteDescription(new RTCSessionDescription(data.answer));
@@ -291,8 +279,8 @@
 			showMsgToBack(msg) {
 				this.msg = msg;
 				this.msgShow = true;
-				this.close_audio="/static/1.mp3"
-				this.open_audio="";
+				this.close_audio = "/static/1.mp3"
+				this.open_audio = "";
 				setTimeout(() => {
 					window.history.back();
 				}, 3000)
@@ -302,35 +290,15 @@
 </script>
 
 <style>
-	.video {
-		position: relative;
-		width: 1080px;
-		height: 440px;
-		margin: 0;
-		padding: 0;
-		text-align: center;
-		overflow: hidden;
-	}
-
-	.video-msg {
+	.bg {
 		position: absolute;
 		top: 0;
-		left: 0;
 		right: 0;
+		left: 0;
 		bottom: 0;
-		line-height: 440px;
-		text-align: center;
-		font-size: 20px;
-		color: #000;
-	}
-
-	video {
-		margin: 0;
-		padding: 0;
-		width: 1080px;
-		height: 440px;
-		background: #ccc;
-		object-fit: contain;
+		overflow: hidden;
+		background: url(/static/bg.jpg) center center no-repeat;
+		background-size: cover;
 	}
 
 	.btn-box {
@@ -368,12 +336,79 @@
 		line-height: 40px;
 		font-size: 20px;
 	}
-	.audio-box{
+
+	.audio-box {
 		position: absolute;
 		width: 10px;
 		height: 10px;
 		overflow: hidden;
-		top:-100px;
+		top: -100px;
 		left: -100px;
+	}
+
+	.preview {
+		position: fixed;
+		z-index: 9998;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(0, 0, 0, 0.5);
+		display: table;
+		transition: opacity 0.3s ease;
+	}
+
+	.preview-wrapper {
+		display: table-cell;
+		vertical-align: middle;
+	}
+
+	.preview-container {
+		width: 400px;
+		height: 150px;
+		margin: 0px auto;
+		background-color: #fff;
+		border-radius: 2px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
+		transition: all 0.3s ease;
+		font-family: Helvetica, Arial, sans-serif;
+		position: relative;
+	}
+
+	.confirm {
+		position: absolute;
+		right: 10px;
+		top: 0px;
+		font-size: 40px;
+	}
+
+	.confirm:hover {
+		color: red;
+		cursor: pointer;
+	}
+
+	.preview-body {
+		position: absolute;
+		width: 380px;
+		height: 130px;
+		margin: 10px 10px 10px 10px;
+	}
+
+	.preview-body>h4 {
+		margin-top: 40px;
+	}
+
+	.preview-body>button {
+		position: absolute;
+		right: 10px;
+		bottom: 0px;
+	}
+
+	.green_color {
+		color: green;
+	}
+
+	.red_color {
+		color: red;
 	}
 </style>
