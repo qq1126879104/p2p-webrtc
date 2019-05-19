@@ -70,6 +70,7 @@ io.on('connect', function(socket) {
 					console.log('fail:', '对方繁忙');
 					return;
 				}
+				socket.callName = data.connectedUser;
 				sendTo(conn, {
 					event: 'call',
 					name: socket.name,
@@ -118,6 +119,8 @@ io.on('connect', function(socket) {
 						});
 					} else {
 						allUsers[data.connectedUser] = true;
+						conn.callName = null;
+						conn.otherName = null;
 						sendTo(conn, {
 							event: 'accept',
 							accept: false,
@@ -163,6 +166,7 @@ io.on('connect', function(socket) {
 				var conn = allSockets[data.connectedUser];
 				allUsers[socket.name] = true;
 				allUsers[data.connectedUser] = true;
+				socket.callName = null;
 				socket.otherName = null;
 				//notify the other user so he can disconnect his peer connection
 				if (conn != null) {
@@ -176,6 +180,7 @@ io.on('connect', function(socket) {
 	});
 
 	socket.on('disconnect', function() {
+		console.log('disconnect ', socket.name);
 		removeUser(socket)
 	});
 });
@@ -185,14 +190,23 @@ function removeUser(user) {
 		delete allUsers[user.name];
 		delete allSockets[user.name];
 		showUserInfo(allUsers);
+		if (user.callName) {
+			console.log('Disconnecting sendTo callName ', user.callName);
+			var conn = allSockets[user.callName];
+			if (conn != null) {
+				sendTo(conn, {
+					event: 'call_fail',
+				});
+			}
+		}
 		if (user.otherName) {
-			console.log('Disconnecting from ', user.otherName);
+			console.log('Disconnecting sendTo otherName ', user.otherName);
 			var conn = allSockets[user.otherName];
 			allUsers[user.otherName] = true;
 			user.otherName = null;
 			if (conn != null) {
 				sendTo(conn, {
-					type: 'leave',
+					event: 'leave',
 				});
 			}
 		}
