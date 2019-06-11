@@ -1,31 +1,35 @@
 <template>
 	<div class="content">
 		<div class="bg" v-show="!show"></div>
-		<div class="content-block" v-show="show">
+		<div class="content-block" style="margin-top: 50px;" v-show="show">
 			<div class="row">
-				<div class="col-md-6" style="height: 500px">
-					<video id="localVideo" :src="local_video" autoplay></video>
+				<div class="col-xs-6" style="height: 500px">
+					<div class="video-box">
+						<video id="localVideo" :src="local_video" autoplay></video>
+					</div>
 				</div>
-				<div class="col-md-6" style="height: 500px">
-					<video id="remoteVideo" :src="remote_video" autoplay></video>
+				<div class="col-xs-6" style="height: 500px">
+					<div class="video-box">
+						<video id="remoteVideo" :src="remote_video" autoplay></video>
+					</div>
 				</div>
 			</div>
-			<div class="btn-box" @click="hangUp">挂断</div>
+			<div class="btn-box" @click="hangUp"></div>
 			<div class="msg" v-show="msgShow"><span>{{msg}}</span></div>
 			<div class="audio-box">
 				<audio autoplay="autoplay" loop="loop" :src="open_audio"></audio>
 				<iframe allow="autoplay"></iframe>
 				<audio autoplay="autoplay" :src="close_audio"></audio>
-				<!-- <iframe allow="autoplay" :src="close_audio"></iframe> -->
+				<iframe :src="timeurl"></iframe>
 			</div>
 		</div>
 		<div class="preview" v-show="accept_video">
 			<div class="preview-wrapper">
 				<div class="preview-container">
 					<div class="preview-body">
-						<h4>设备编号{{call_username}}发起视频邀请，是否接受?</h4>
-						<button class="btn-success btn" @click="accept">接受</button>
-						<button class="btn-danger btn" style="margin-right: 70px" @click="reject">拒绝</button>
+						<h4>设备编号{{call_username}}发起视频邀请<br>是否接受?</h4>
+						<div class="btn-yes button" @click="accept"></div>
+						<div class="btn-no button" style="margin-right: 210px" @click="reject"></div>
 					</div>
 					<div class="confirm" @click="closePreview">×</div>
 				</div>
@@ -34,7 +38,7 @@
 	</div>
 </template>
 
-<script>
+<script scoped>
 	navigator.getUserMedia = navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
 	window.RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
 	window.RTCIceCandidate = window.RTCIceCandidate || window.mozRTCIceCandidate || window.webkitRTCIceCandidate;
@@ -47,7 +51,7 @@
 	var connectedUser = null;
 	var configuration = {
 		iceServers: [{
-			url: "turn:turn.sczhou.com:3478",
+			url: "turn:" + location.hostname + ":3478",
 			credential: "ling1234",
 			username: "ling"
 		}]
@@ -67,6 +71,8 @@
 				msg: "",
 				open_audio: "",
 				close_audio: "",
+				startTime: "",
+				timeurl: ""
 			};
 		},
 		mounted() {
@@ -105,6 +111,9 @@
 							break;
 						case 'leave':
 							this.handleLeave();
+							break;
+						case 'call_fail':
+							this.handleCallFail();
 							break;
 						default:
 							break;
@@ -156,7 +165,6 @@
 				if (this.call_username.length > 0) {
 					if (this.users[this.call_username] === true) {
 						connectedUser = this.call_username;
-						this.createConnection();
 						this.send({
 							event: 'call',
 						});
@@ -206,10 +214,14 @@
 				});
 				this.accept_video = false;
 				this.open_audio = "";
+				this.show = true;
+				this.initCreate();
+				this.startTime = new Date().getTime();
 			},
 			handleAccept(data) {
 				if (data.accept) {
 					// create an offer
+					this.createConnection();
 					peerConn.createOffer(
 						offer => {
 							this.send({
@@ -261,17 +273,25 @@
 				this.handleLeave();
 			},
 			handleLeave() {
+				if (this.startTime) this.timeurl = "https://" + location.hostname + ":5151/get.asp?start=" + this.startTime +
+					"&endTime=" + new Date().getTime() + "&callerid=" + connectedUser;
+				this.startTime = null;
 				connectedUser = null;
 				this.remote_video = '';
 				if (peerConn) {
 					peerConn.close();
 					peerConn.onicecandidate = null;
 					peerConn.onaddstream = null;
-					if (peerConn.signalingState == 'closed') {
-						this.initCreate();
-					}
+					// if (peerConn.signalingState == 'closed') {
+					// 	this.initCreate();
+					// }
 				}
 				this.showMsgToBack("通话结束");
+			},
+			handleCallFail() {
+				console.log("通话取消")
+				this.remote_video = '';
+				this.showMsgToBack("通话取消");
 			},
 			closePreview() {
 				this.accept_video = false;
@@ -279,17 +299,41 @@
 			showMsgToBack(msg) {
 				this.msg = msg;
 				this.msgShow = true;
-				this.close_audio = "/static/1.mp3"
+				this.close_audio = "/static/1.mp3";
 				this.open_audio = "";
+				this.accept_video = false;
 				setTimeout(() => {
-					window.history.back();
+					this.close_audio = "";
+					this.msgShow = false;
+					this.show = false;
+					this.timeurl = "";
 				}, 3000)
 			}
 		},
 	};
 </script>
 
-<style>
+<style scoped>
+	.col-xs-6 .video-box{
+		margin-left: 20px;
+		padding: 20px;
+		height: 460px;
+		border-radius: 20px;
+		background: #193473;
+	}
+	.col-xs-6:last-child .video-box{
+		margin-left: 0;
+		margin-right: 20px;
+	}
+	video {
+		margin: 0;
+		padding: 0;
+		width: 100%;
+		height: 100%;
+		background: #ccc;
+		object-fit: contain;
+	}
+
 	.bg {
 		position: absolute;
 		top: 0;
@@ -302,17 +346,13 @@
 	}
 
 	.btn-box {
-		position: absolute;
-		top: 616px;
-		left: 460px;
-		width: 160px;
-		height: 48px;
-		line-height: 48px;
-		font-size: 26px;
-		color: #c50000;
-		font-weight: 400;
-		letter-spacing: 10px;
-		background: url(/static/button.png) center center no-repeat;
+		float: right;
+		margin-right: 50px;
+		margin-top: 50px;
+		margin-bottom: 50px;
+		width: 130px;
+		height: 100px;
+		background: url(/static/guaduan2.png) center center no-repeat;
 		background-size: 100% auto;
 		cursor: pointer;
 	}
@@ -364,8 +404,8 @@
 	}
 
 	.preview-container {
-		width: 400px;
-		height: 150px;
+		width: 540px;
+		height: 250px;
 		margin: 0px auto;
 		background-color: #fff;
 		border-radius: 2px;
@@ -379,7 +419,7 @@
 		position: absolute;
 		right: 10px;
 		top: 0px;
-		font-size: 40px;
+		font-size: 58px;
 	}
 
 	.confirm:hover {
@@ -389,19 +429,32 @@
 
 	.preview-body {
 		position: absolute;
-		width: 380px;
-		height: 130px;
+		width: 520px;
+		height: 230px;
 		margin: 10px 10px 10px 10px;
 	}
 
 	.preview-body>h4 {
-		margin-top: 40px;
+		margin-top: 50px;
+		font-size: 24px;
+		line-height: 40px;
 	}
 
-	.preview-body>button {
+	.preview-body>.button {
 		position: absolute;
 		right: 10px;
-		bottom: 0px;
+		bottom: 10px;
+		width: 180px;
+		height: 60px;
+	}
+	
+	.btn-yes{
+		background: url(/static/jiehsou.png) center center no-repeat;
+		background-size: 100% auto;
+	}
+	.btn-no{
+		background: url(/static/jujue.png) center center no-repeat;
+		background-size: 100% auto;
 	}
 
 	.green_color {

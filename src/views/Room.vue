@@ -1,7 +1,7 @@
 <template>
 	<div class="content">
 		<div class="content-block" v-show="show">
-			<div id="top" style="width:1080px; height:200px;">
+			<div id="top" style="width:1080px; height:200px;margin-bottom: 20PX;">
 				<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="1080" height="200">
 					<param name="movie" value="/static/top.swf">
 					<param name="quality" value="high">
@@ -9,14 +9,18 @@
 					<embed src="/static/top.swf" width="1080" height="200" quality="high" type="application/x-shockwave-flash"></object>
 			</div>
 			<div class="video local">
-				<video id="localVideo" :src="local_video" autoplay></video>
+				<div class="video-box">
+					<video id="localVideo" :src="local_video" autoplay></video>
+				</div>
 				<div class="video-msg" v-show="localMsgShow">{{localMsg}}</div>
 			</div>
 			<div class="video center">
-				<video id="remoteVideo" :src="remote_video" autoplay></video>
+				<div class="video-box">
+					<video id="remoteVideo" :src="remote_video" autoplay></video>
+				</div>
 				<div class="video-msg" v-show="remoteMsgShow">{{remoteMsg}}</div>
 			</div>
-			<div class="btn-box" @click="hangUp">挂断</div>
+			<div class="btn-box" @click="hangUp"></div>
 		</div>
 		<div class="msg" v-show="msgShow"><span>{{msg}}</span></div>
 		<div class="audio-box">
@@ -40,20 +44,20 @@
 	</div>
 </template>
 
-<script>
+<script scoped>
 	navigator.getUserMedia = navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
 	window.RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
 	window.RTCIceCandidate = window.RTCIceCandidate || window.mozRTCIceCandidate || window.webkitRTCIceCandidate;
 	window.RTCSessionDescription =
 		window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
 	var myhost = location.origin;
-	const socket = io.connect(myhost);
+	var socket = io.connect(myhost);
 	var localStream;
 	var peerConn;
 	var connectedUser = null;
 	var configuration = {
 		iceServers: [{
-			url: "turn:turn.sczhou.com:3478",
+			url: "turn:" + location.hostname + ":3478",
 			credential: "ling1234",
 			username: "ling"
 		}]
@@ -65,7 +69,7 @@
 		if (r != null) return unescape(r[2]);
 		return null;
 	}
-	
+
 	export default {
 		data() {
 			return {
@@ -82,12 +86,12 @@
 				remoteMsg: "等待对方连接...",
 				msgShow: false,
 				msg: "",
-				open_audio:"/static/wx.mp3",
-				close_audio:"",
+				open_audio: "/static/wx.mp3",
+				close_audio: "",
 			};
 		},
 		mounted() {
-			this.user_name=getQuery("callerid") || ("unknown-" + Math.floor(Math.random() * 900 + 100));
+			this.user_name = getQuery("callerid") || ("unknown-" + Math.floor(Math.random() * 900 + 100));
 			console.log(this.user_name)
 			this.send({
 				event: 'join',
@@ -144,8 +148,8 @@
 				} else {
 					this.users = data.allUsers;
 					this.call_username = "admin";
-					this.call();
 					this.initCreate();
+					this.call();
 				}
 			},
 			initCreate() {
@@ -178,11 +182,10 @@
 				this.send({
 					event: 'call',
 				});
-				this.createConnection();
 			},
 			createConnection() {
 				peerConn = new RTCPeerConnection(configuration);
-				localStream && peerConn.addStream(localStream);
+				peerConn.addStream(localStream);
 				peerConn.onaddstream = e => {
 					this.remote_video = window.URL.createObjectURL(e.stream);
 					this.remoteMsgShow = false;
@@ -208,7 +211,7 @@
 					accept: false,
 				});
 				this.accept_video = false;
-				this.open_audio="";
+				this.open_audio = "";
 			},
 			accept() {
 				this.send({
@@ -220,6 +223,7 @@
 			handleAccept(data) {
 				if (data.accept) {
 					// create an offer
+					this.createConnection();
 					peerConn.createOffer(
 						offer => {
 							this.send({
@@ -235,7 +239,7 @@
 				} else {
 					this.showMsgToBack("对方繁忙");
 				}
-				this.open_audio="";
+				this.open_audio = "";
 			},
 			handleOffer(data) {
 				connectedUser = data.name;
@@ -254,7 +258,7 @@
 						this.showMsgToBack("连接失败");
 					}
 				);
-				this.open_audio="";
+				this.open_audio = "";
 			},
 			handleMsg(data) {
 				this.showMsgToBack(data.message);
@@ -291,8 +295,9 @@
 			showMsgToBack(msg) {
 				this.msg = msg;
 				this.msgShow = true;
-				this.close_audio="/static/1.mp3"
-				this.open_audio="";
+				this.close_audio = "/static/1.mp3"
+				this.open_audio = "";
+				socket = {};
 				setTimeout(() => {
 					window.history.back();
 				}, 3000)
@@ -301,11 +306,11 @@
 	};
 </script>
 
-<style>
+<style scoped>
 	.video {
 		position: relative;
 		width: 1080px;
-		height: 440px;
+		height: 770px;
 		margin: 0;
 		padding: 0;
 		text-align: center;
@@ -318,33 +323,35 @@
 		left: 0;
 		right: 0;
 		bottom: 0;
-		line-height: 440px;
+		line-height: 770px;
 		text-align: center;
 		font-size: 20px;
 		color: #000;
 	}
 
+	.video-box {
+		margin: 20px 30px;
+		padding: 30px;
+		width: 1020px;
+		height: 730px;
+		border-radius: 30px;
+		background: #e83527;
+	}
+
 	video {
-		margin: 0;
-		padding: 0;
-		width: 1080px;
-		height: 440px;
+		width: 100%;
+		height: 100%;
 		background: #ccc;
 		object-fit: contain;
 	}
 
 	.btn-box {
 		position: absolute;
-		top: 616px;
-		left: 460px;
-		width: 160px;
-		height: 48px;
-		line-height: 48px;
-		font-size: 26px;
-		color: #c50000;
-		font-weight: 400;
-		letter-spacing: 10px;
-		background: url(/static/button.png) center center no-repeat;
+		bottom: 40px;
+		right: 40px;
+		width: 130px;
+		height: 100px;
+		background: url(/static/guaduan1.png) center center no-repeat;
 		background-size: 100% auto;
 		cursor: pointer;
 	}
@@ -368,12 +375,13 @@
 		line-height: 40px;
 		font-size: 20px;
 	}
-	.audio-box{
+
+	.audio-box {
 		position: absolute;
 		width: 10px;
 		height: 10px;
 		overflow: hidden;
-		top:-100px;
+		top: -100px;
 		left: -100px;
 	}
 </style>
