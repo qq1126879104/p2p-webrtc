@@ -1,14 +1,14 @@
 <template>
 	<div class="content">
 		<div class="bg" v-show="!show"></div>
-		<div class="content-block" style="margin-top: 50px;" v-show="show">
-			<div class="row">
-				<div class="col-xs-6" style="height: 500px">
+		<div class="content-block" v-show="show">
+			<div class="row" style="height:75%">
+				<div class="col-xs-6" style="height: 100%">
 					<div class="video-box">
 						<video id="localVideo" :src="local_video" autoplay></video>
 					</div>
 				</div>
-				<div class="col-xs-6" style="height: 500px">
+				<div class="col-xs-6" style="height: 100%">
 					<div class="video-box">
 						<video id="remoteVideo" :src="remote_video" autoplay></video>
 					</div>
@@ -314,17 +314,19 @@
 </script>
 
 <style scoped>
-	.col-xs-6 .video-box{
+	.col-xs-6 .video-box {
 		margin-left: 20px;
 		padding: 20px;
-		height: 460px;
+		height: 100%;
 		border-radius: 20px;
 		background: #193473;
 	}
-	.col-xs-6:last-child .video-box{
+
+	.col-xs-6:last-child .video-box {
 		margin-left: 0;
 		margin-right: 20px;
 	}
+
 	video {
 		margin: 0;
 		padding: 0;
@@ -345,10 +347,18 @@
 		background-size: cover;
 	}
 
+	.content-block {
+		padding-top: 3%;
+		height: 100%;
+		background: url("/static/2.jpg") center center no-repeat;
+		background-size: cover;
+		background-attachment: fixed;
+	}
+
 	.btn-box {
 		float: right;
 		margin-right: 50px;
-		margin-top: 50px;
+		margin-top: 30px;
 		margin-bottom: 50px;
 		width: 130px;
 		height: 100px;
@@ -447,12 +457,13 @@
 		width: 180px;
 		height: 60px;
 	}
-	
-	.btn-yes{
+
+	.btn-yes {
 		background: url(/static/jiehsou.png) center center no-repeat;
 		background-size: 100% auto;
 	}
-	.btn-no{
+
+	.btn-no {
 		background: url(/static/jujue.png) center center no-repeat;
 		background-size: 100% auto;
 	}

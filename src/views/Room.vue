@@ -307,6 +307,12 @@
 </script>
 
 <style scoped>
+	.content{
+		background:url("/static/1.jpg") center center no-repeat;
+		background-size: cover;
+		background-attachment: fixed;
+	}
+	
 	.video {
 		position: relative;
 		width: 1080px;
@@ -335,7 +341,7 @@
 		width: 1020px;
 		height: 730px;
 		border-radius: 30px;
-		background: #e83527;
+		background: #cf5400;
 	}
 
 	video {
