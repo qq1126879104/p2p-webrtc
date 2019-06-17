@@ -2,7 +2,7 @@
 	<div class="content">
 		<div class="header">
 			<div class="header-line">
-				<div class="header-title">泾源县人民检察院视频服务热线</div>
+				<div class="header-title">泾源县人民检察院服务热线</div>
 			</div>
 		</div>
 		<div class="footer">
