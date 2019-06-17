@@ -1,5 +1,20 @@
 <template>
 	<div class="content">
+		<div class="header">
+			<div class="header-line">
+				<div class="header-title">泾源县人民检察院视频服务热线</div>
+			</div>
+		</div>
+		<div class="footer">
+			<div class="footer-content">
+				<div>版权所有： 泾源县人民检察院</div>
+				<div>地址： 宁夏银川市兴庆区北京东路41号</div>
+				<div>邮编： 750001</div>
+				<div>电话： （0951）5926099</div>
+				<div>传真： （0951）5926090</div>
+				<div>控告申诉举报电话： （0951）12309</div>
+			</div>
+		</div>
 		<div class="bg" v-show="!show"></div>
 		<div class="content-block" v-show="show">
 			<div class="row" style="height:75%">
@@ -314,12 +329,66 @@
 </script>
 
 <style scoped>
+	.header {
+		position: fixed;
+		left: 0;
+		right: 0;
+		top: 0;
+		padding-top: 10px;
+		background: #257192;
+		z-index: 9999;
+	}
+
+	.header-line {
+		background: url(/static/headerBg.jpg) center;
+		background-size: cover;
+	}
+
+	.header-title {
+		margin-left: 100px;
+		padding-left: 100px;
+		height: 120px;
+		line-height: 120px;
+		font-size: 36px;
+		font-weight: bold;
+		color: #004564;
+		text-align: left;
+		background: url(/static/logo1.png) left center no-repeat;
+		background-size: 80px auto;
+	}
+
+	.footer {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: #033c56;
+		z-index: 9999;
+		color: #9dc9dd;
+	}
+
+	.footer-content {
+		margin-left: 100px;
+		padding-left: 90px;
+		min-height: 90px;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		align-content: center;
+		background: url(/static/red.png) left center no-repeat;
+		background-size: 80px auto;
+	}
+
+	.footer-content div {
+		margin-right: 20px;
+	}
+
 	.col-xs-6 .video-box {
 		margin-left: 20px;
 		padding: 20px;
 		height: 100%;
 		border-radius: 20px;
-		background: #193473;
+		background: #267294;
 	}
 
 	.col-xs-6:last-child .video-box {
@@ -348,8 +417,8 @@
 	}
 
 	.content-block {
-		padding-top: 3%;
-		height: 100%;
+		padding-top: 150px;
+		height: calc(100% - 90px);
 		background: url("/static/2.jpg") center center no-repeat;
 		background-size: cover;
 		background-attachment: fixed;

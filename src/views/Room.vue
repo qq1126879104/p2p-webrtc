@@ -299,7 +299,7 @@
 				this.open_audio = "";
 				socket = {};
 				setTimeout(() => {
-					window.history.back();
+					top.location.href = "http://cmp.jyjcy.net:5151/index.asp"
 				}, 3000)
 			}
 		},
@@ -307,12 +307,12 @@
 </script>
 
 <style scoped>
-	.content{
-		background:url("/static/1.jpg") center center no-repeat;
+	.content {
+		background: url("/static/1.jpg") center center no-repeat;
 		background-size: cover;
 		background-attachment: fixed;
 	}
-	
+
 	.video {
 		position: relative;
 		width: 1080px;
